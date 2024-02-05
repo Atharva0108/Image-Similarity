@@ -68,7 +68,8 @@ if __name__ == "__main__":
     st.title("Image Similarity Checker")
     st.markdown("---")
 
-    reference_folder = "ONS/reference"  # Update this path accordingly
+    # Dynamic reference folder path for Streamlit Sharing
+    reference_folder = os.path.join(os.path.dirname(__file__), "ONS1", "ONS", "reference")
     reference_features = load_reference_features(reference_folder)
 
     user_image = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
