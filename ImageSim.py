@@ -9,6 +9,7 @@ hog_threshold = 0.95  # Threshold for HOG feature comparison
 color_threshold = 0.9  # Threshold for color histogram comparison
 
 # Step 2: Load Reference Images and Extract Features
+@st.cache
 def load_reference_features(reference_folder):
     reference_features = {}
     for filename in os.listdir(reference_folder):
@@ -23,14 +24,14 @@ def load_reference_features(reference_folder):
             resized_image = transform.resize(reference_image_gray, (128, 128))
             hog_features = feature.hog(resized_image, pixels_per_cell=(16, 16))
             color_hist = np.histogram(reference_image_gray, bins=8, range=(0, 1))[0] / 128**2
-            reference_features[filename] = (reference_image_gray, hog_features, color_hist, reference_image)
+            reference_features[filename] = (reference_image_gray, hog_features, color_hist)
     return reference_features
 
 # Step 3: Compare New Images with Reference Features
 def compare_with_reference(user_image, reference_features):
     # Check if the user image matches with any reference grayscale image
     grayscale_match_found = False
-    for _, (ref_image_gray, _, _, _) in reference_features.items():
+    for _, (ref_image_gray, _, _) in reference_features.items():
         if np.array_equal(user_image, ref_image_gray):
             grayscale_match_found = True
             break
@@ -45,9 +46,8 @@ def compare_with_reference(user_image, reference_features):
     user_color_hist = np.histogram(user_image, bins=8, range=(0, 1))[0] / 128**2
 
     hog_match_found = color_match_found = False
-    matched_image = None
 
-    for ref_filename, (ref_image_gray, ref_hog_features, ref_color_hist, ref_image) in reference_features.items():
+    for ref_filename, (ref_image_gray, ref_hog_features, ref_color_hist) in reference_features.items():
         hog_similarity = cosine_similarity([ref_hog_features], [user_features])[0][0]
         if hog_similarity >= hog_threshold:
             hog_match_found = True
@@ -58,22 +58,17 @@ def compare_with_reference(user_image, reference_features):
 
         if hog_match_found and color_match_found:
             st.write(f"Image matches with {ref_filename}. OK")
-            matched_image = ref_image
-            break
+            return True
 
-    if matched_image is not None:
-        st.image(matched_image, caption='Matched Image')
-        return True
-    else:
-        st.write("Image does not match with any reference image. Not-OK")
-        return False
+    st.write("Image does not match with any reference image. Not-OK")
+    return False
 
 
 if __name__ == "__main__":
     st.title("Image Similarity Checker")
     st.markdown("---")
 
-    reference_folder = "ONS1/ONS/reference"
+    reference_folder = "ONS/reference"  # Update this path accordingly
     reference_features = load_reference_features(reference_folder)
 
     user_image = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
@@ -87,3 +82,4 @@ if __name__ == "__main__":
                 st.success("OK")
             else:
                 st.error("Not-OK")
+
