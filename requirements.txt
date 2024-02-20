@@ -2,3 +2,4 @@ streamlit
 numpy
 scikit-image
 scikit-learn
+opencv-python
