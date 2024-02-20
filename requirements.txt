@@ -2,5 +2,5 @@ streamlit
 numpy
 scikit-image
 scikit-learn
-opencv-python-headless==4.5.4.58
+
 
